@@ -1,0 +1,8 @@
+{
+  "appId": "com.tusti.ai",
+  "appName": "Tusti",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
