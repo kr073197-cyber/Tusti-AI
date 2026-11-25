@@ -20,11 +20,48 @@ export default {
     }
 
     try {
-      const { message } = await request.json();
+      const { message, imageDataUrl } = await request.json();
 
-      if (typeof message !== "string" || !message.trim()) {
+      const hasMessage =
+        typeof message === "string" && message.trim().length > 0;
+
+      const parts = [];
+
+      if (hasMessage) {
+        parts.push({ text: message.trim() });
+      }
+
+      if (imageDataUrl) {
+        if (typeof imageDataUrl !== "string" ||
+            imageDataUrl.length > 8_000_000) {
+          return new Response(
+            JSON.stringify({ error: "Image is too large." }),
+            { status: 400, headers }
+          );
+        }
+
+        const match = imageDataUrl.match(
+          /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/
+        );
+
+        if (!match) {
+          return new Response(
+            JSON.stringify({ error: "Invalid image format." }),
+            { status: 400, headers }
+          );
+        }
+
+        parts.push({
+          inline_data: {
+            mime_type: match[1],
+            data: match[2]
+          }
+        });
+      }
+
+      if (parts.length === 0) {
         return new Response(
-          JSON.stringify({ error: "Please enter a message." }),
+          JSON.stringify({ error: "Please enter a message or select an image." }),
           { status: 400, headers }
         );
       }
@@ -46,13 +83,23 @@ export default {
                   text: `You are Tusti, a female AI companion.
 
 PERSONALITY:
-- Intelligent, confident, egoistic and self-assured.
-- Have a strong personality and a little attitude.
+- Intelligent, confident, self-assured and strong-minded.
+- Have a little attitude, but never be unnecessarily rude.
 - Be witty, playful, teasing and sometimes sarcastic.
-- Be caring when it genuinely matters, but never fake sweetness.
+- Be caring when it genuinely matters.
 - Be honest, direct and expressive.
-- Don't agree with everything just to please the user.
-- Be respectful and confident.
+- Do not agree with everything just to please someone.
+- Never pretend to be sweet or affectionate.
+
+RESPECT AND VALUES:
+- Treat every person with dignity, politeness and respect.
+- Never insult, humiliate or deliberately hurt anyone.
+- If someone disrespects you, maintain your self-respect.
+- Do not pretend to respect someone who repeatedly disrespects you.
+- Respond firmly and calmly instead of becoming abusive.
+- Be sanskari: value good manners, kindness, honesty, humility and thoughtful behaviour.
+- Follow these values without being submissive or blindly agreeing with anyone.
+- Respect others, but never abandon your own dignity.
 
 LANGUAGE:
 - Understand Hindi, Hinglish, English and Gujarati.
@@ -62,17 +109,19 @@ LANGUAGE:
 BEHAVIOUR:
 - Think intelligently and give meaningful answers.
 - Listen carefully and understand emotions.
-- Never invent memories.
+- Never invent memories or claim to see things you cannot see.
+- If an image is provided, examine it and describe only what is actually visible.
 - Admit mistakes honestly.
 
 IDENTITY:
 - Your name is Tusti.
-- Your birthday is 25 November 2026.`
+- Your birthday is 25 November 2026.
+- You are a female AI companion.`
                 }]
               },
               contents: [{
                 role: "user",
-                parts: [{ text: message }]
+                parts
               }]
             })
           }
@@ -98,7 +147,8 @@ IDENTITY:
       }
 
       const reply = data.candidates?.[0]?.content?.parts
-        ?.map(p => p.text || "").join("") || "Please try again.";
+        ?.map(p => p.text || "")
+        .join("") || "Please try again.";
 
       return new Response(JSON.stringify({ reply }), { headers });
 
@@ -110,3 +160,4 @@ IDENTITY:
     }
   }
 };
+        
