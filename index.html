@@ -201,7 +201,10 @@ footer {
 </div>
 
 <script>
-function sendMessage() {
+
+const WORKER_URL = "https://tusti-ai.kr073197.workers.dev";
+
+async function sendMessage() {
   const input = document.getElementById("userInput");
   const chat = document.getElementById("chat");
   const message = input.value.trim();
@@ -217,19 +220,41 @@ function sendMessage() {
 
   const reply = document.createElement("div");
   reply.className = "message bot";
-  reply.textContent =
-    "I received your message! 💙 My AI brain is coming soon. For now, I'm just a demo interface.";
+  reply.textContent = "Tusti is thinking... 💙";
   chat.appendChild(reply);
+
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    const response = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Connection failed");
+    }
+
+    reply.textContent = data.reply || "Please try again.";
+  } catch (error) {
+    reply.textContent = "Sorry, connection error. Please try again. 💙";
+  }
 
   chat.scrollTop = chat.scrollHeight;
 }
 
 document.getElementById("userInput")
-.addEventListener("keydown", function(event) {
-  if (event.key === "Enter") {
-    sendMessage();
-  }
-});
+  .addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+      sendMessage();
+    }
+  });
+  
 </script>
 
 </body>
