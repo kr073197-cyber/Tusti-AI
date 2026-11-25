@@ -242,7 +242,8 @@ async function sendMessage() {
 
     reply.textContent = data.reply || "Please try again.";
   } catch (error) {
-    reply.textContent = "Sorry, connection error. Please try again. 💙";
+  reply.textContent = "Error: " + error.message;
+  console.error(error);
   }
 
   chat.scrollTop = chat.scrollHeight;
