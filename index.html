@@ -10,18 +10,22 @@
 body{margin:0;padding:18px;min-height:100vh;background:#101629;color:#f4f5ff;font-family:Arial,sans-serif}
 .app{max-width:600px;margin:25px auto;background:#1a2340;border:1px solid #34405f;border-radius:20px;padding:20px}
 h1{text-align:center;color:#c8d5ff}.subtitle{text-align:center;color:#aab6d5}
-input,textarea,button{width:100%;padding:13px;margin-top:10px;border-radius:10px;border:1px solid #536184;font-size:16px}
-input,textarea{background:#111a30;color:white}
+input,textarea,button,select{width:100%;padding:13px;margin-top:10px;border-radius:10px;border:1px solid #536184;font-size:16px}
+input,textarea,select{background:#111a30;color:white}
 button{background:#7189d9;color:white;border:0;font-weight:bold;cursor:pointer}
 button.secondary{background:#354565}button.danger{background:#9b435a}button:disabled{opacity:.5}
 .hidden{display:none!important}
 #chat{height:330px;overflow-y:auto;background:#111a30;border-radius:12px;padding:12px;margin:15px 0}
 .message{padding:11px;margin:9px 0;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere}
 .user{background:#354b79}.tusti{background:#303956}
+.message-actions{display:flex;gap:8px;margin:0 0 12px 0}
+.message-actions button{width:auto;flex:1;margin-top:0;padding:9px;font-size:14px}
 .status{color:#b7c5e9;font-size:14px;margin-top:10px;text-align:center}
 .section{border-top:1px solid #46516d;margin-top:22px;padding-top:14px}
 #preview{max-width:100%;max-height:180px;display:block;margin:10px auto;border-radius:12px}
 .memory-item{background:#111a30;padding:10px;margin:8px 0;border-radius:9px;overflow-wrap:anywhere}
+.voice-row{display:flex;gap:8px}.voice-row button{flex:1}
+.small-note{font-size:12px;color:#aab6d5;line-height:1.5}
 </style>
 </head>
 <body>
@@ -37,8 +41,20 @@ button.secondary{background:#354565}button.danger{background:#9b435a}button:disa
 </section>
 <section id="main" class="hidden">
 <p class="subtitle">Tusti is here with you 🌸</p>
+<label for="voiceLanguage">Voice language</label>
+<select id="voiceLanguage">
+<option value="hi-IN">Hindi</option>
+<option value="gu-IN">Gujarati</option>
+<option value="en-IN">English</option>
+</select>
+<div class="small-note">Choose the language you will speak. Tusti will try to speak replies in the selected language.</div>
 <div id="chat"><div class="message tusti">Hello! Main Tusti hoon. ❤️ Aaj tum kaise ho?</div></div>
 <textarea id="message" rows="3" placeholder="Tusti se baat karo..."></textarea>
+<div class="voice-row">
+<button class="secondary" id="micButton" type="button">🎙️ Speak</button>
+<button class="secondary" id="stopVoiceButton" type="button">🔇 Stop voice</button>
+</div>
+<p class="status" id="voiceStatus">Microphone aur voice browser support par depend karte hain.</p>
 <label for="photo">📷 Gallery se photo choose karo</label>
 <input id="photo" type="file" accept="image/jpeg,image/png,image/webp">
 <img id="preview" class="hidden" alt="Selected photo preview">
@@ -63,6 +79,8 @@ button.secondary{background:#354565}button.danger{background:#9b435a}button:disa
 const API_URL="https://tusti-ai.kr073197.workers.dev";
 let token=sessionStorage.getItem("tusti_session");
 let selectedImage="";
+let recognition=null;
+let speakingNow=false;
 const $=id=>document.getElementById(id);
 function showApp(){$("login").classList.add("hidden");$("main").classList.remove("hidden")}
 function showLogin(){$("main").classList.add("hidden");$("login").classList.remove("hidden")}
@@ -84,10 +102,62 @@ async function login(){
  }catch(error){status.textContent=error.message}
  finally{button.disabled=false}
 }
-function logout(){token=null;sessionStorage.removeItem("tusti_session");showLogin();$("loginStatus").textContent="You have been logged out."}
+function logout(){
+ stopSpeaking();
+ if(recognition){try{recognition.stop()}catch(e){}}
+ token=null;sessionStorage.removeItem("tusti_session");showLogin();$("loginStatus").textContent="You have been logged out."
+}
 function addMessage(text,who){
  const item=document.createElement("div");item.className="message "+who;item.textContent=text;
  $("chat").appendChild(item);$("chat").scrollTop=$("chat").scrollHeight;
+ return item;
+}
+function getSpeechLanguage(){return $("voiceLanguage").value}
+function getPreferredVoice(lang){
+ const voices=window.speechSynthesis?window.speechSynthesis.getVoices():[];
+ const prefix=lang.split("-")[0].toLowerCase();
+ const matching=voices.filter(v=>v.lang&&v.lang.toLowerCase().startsWith(prefix));
+ const femaleHints=/female|woman|zira|samantha|susan|karen|heera|swara|lekha|veena|priya|neerja/i;
+ return matching.find(v=>femaleHints.test(v.name))||matching[0]||voices.find(v=>femaleHints.test(v.name))||null;
+}
+function speakText(text){
+ if(!("speechSynthesis" in window)){ $("voiceStatus").textContent="Is browser mein voice playback supported nahi hai.";return}
+ stopSpeaking();
+ const utterance=new SpeechSynthesisUtterance(text);
+ utterance.lang=getSpeechLanguage();
+ const voice=getPreferredVoice(utterance.lang);
+ if(voice)utterance.voice=voice;
+ utterance.rate=0.96;utterance.pitch=1.04;
+ utterance.onstart=()=>{$("voiceStatus").textContent="Tusti bol rahi hai...";speakingNow=true};
+ utterance.onend=()=>{$("voiceStatus").textContent="Voice ready.";speakingNow=false};
+ utterance.onerror=()=>{$("voiceStatus").textContent="Voice playback nahi ho paya.";speakingNow=false};
+ window.speechSynthesis.speak(utterance);
+}
+function stopSpeaking(){
+ if("speechSynthesis" in window)window.speechSynthesis.cancel();
+ speakingNow=false;
+}
+function startListening(){
+ const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SpeechRecognition){$("voiceStatus").textContent="Voice input is not supported in this browser. Android Chrome mein try karo.";return}
+ if(recognition){try{recognition.stop()}catch(e){}}
+ recognition=new SpeechRecognition();
+ recognition.lang=getSpeechLanguage();
+ recognition.interimResults=false;
+ recognition.maxAlternatives=1;
+ recognition.onstart=()=>{$("voiceStatus").textContent="Main sun rahi hoon... bolo ❤️";$("micButton").disabled=true};
+ recognition.onresult=event=>{
+  const spoken=event.results[0][0].transcript;
+  const existing=$("message").value.trim();
+  $("message").value=(existing?existing+" ":"")+spoken;
+  $("voiceStatus").textContent="Tumhari baat likh di hai. Send dabao.";
+ };
+ recognition.onerror=event=>{
+  const messages={ "not-allowed":"Microphone permission allow karo.","no-speech":"Awaaz sunai nahi di. Dobara try karo.","network":"Speech recognition ke liye internet connection check karo."};
+  $("voiceStatus").textContent=messages[event.error]||("Mic error: "+event.error);
+ };
+ recognition.onend=()=>{$("micButton").disabled=false};
+ try{recognition.start()}catch(error){$("voiceStatus").textContent="Microphone start nahi hua. Dobara try karo.";$("micButton").disabled=false}
 }
 $("photo").addEventListener("change",()=>{
  const file=$("photo").files[0];selectedImage="";$("preview").classList.add("hidden");
@@ -102,7 +172,10 @@ async function sendMessage(){
  addMessage(message||"📷 Photo sent","user");$("message").value="";button.disabled=true;status.textContent="Tusti is thinking...";
  try{
   const result=await api({action:"chat",token,message:message||"Please look at this photo.",imageDataUrl:selectedImage||undefined});
-  addMessage(result.reply,"tusti");status.textContent="";selectedImage="";$("photo").value="";$("preview").src="";$("preview").classList.add("hidden");
+  const reply=result.reply;
+  addMessage(reply,"tusti");
+  speakText(reply);
+  status.textContent="";selectedImage="";$("photo").value="";$("preview").src="";$("preview").classList.add("hidden");
  }catch(error){addMessage("Sorry, "+error.message,"tusti");status.textContent=error.message}
  finally{button.disabled=false}
 }
@@ -127,11 +200,14 @@ async function forgetAll(){
 }
 $("loginButton").addEventListener("click",login);
 $("sendButton").addEventListener("click",sendMessage);
+$("micButton").addEventListener("click",startListening);
+$("stopVoiceButton").addEventListener("click",stopSpeaking);
 $("rememberButton").addEventListener("click",remember);
 $("viewMemoriesButton").addEventListener("click",loadMemories);
 $("forgetButton").addEventListener("click",forgetAll);
 $("logoutButton").addEventListener("click",logout);
 $("message").addEventListener("keydown",event=>{if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();sendMessage()}});
+if("speechSynthesis" in window){window.speechSynthesis.onvoiceschanged=()=>{}}
 if(token){showApp();loadMemories()}else{showLogin()}
 </script>
 </body>
