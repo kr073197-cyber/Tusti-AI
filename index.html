@@ -1,262 +1,138 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tusti AI - Personal Companion</title>
-
+<meta name="theme-color" content="#101629">
+<title>Tusti AI</title>
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: Arial, sans-serif;
-  min-height: 100vh;
-  color: white;
-  background:
-    radial-gradient(circle at 20% 20%, #153b79 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, #30105f 0%, transparent 40%),
-    linear-gradient(145deg, #030817, #07152e, #100b29);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 15px;
-}
-
-.app {
-  width: 100%;
-  max-width: 450px;
-  height: 90vh;
-  min-height: 520px;
-  max-height: 850px;
-  border: 1px solid rgba(100,180,255,.3);
-  border-radius: 25px;
-  background: rgba(8,20,45,.85);
-  box-shadow: 0 0 40px rgba(0,140,255,.2);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-header {
-  padding: 22px;
-  text-align: center;
-  border-bottom: 1px solid rgba(100,180,255,.2);
-}
-
-.logo {
-  font-size: 30px;
-  font-weight: bold;
-  letter-spacing: 5px;
-  color: #75caff;
-  text-shadow: 0 0 20px #168bff;
-}
-
-.subtitle {
-  font-size: 11px;
-  letter-spacing: 2px;
-  color: #9bb9e8;
-  margin-top: 7px;
-}
-
-.status {
-  margin-top: 12px;
-  font-size: 12px;
-  color: #76e8c0;
-}
-
-.welcome {
-  text-align: center;
-  padding: 35px 15px 20px;
-}
-
-.avatar {
-  width: 85px;
-  height: 85px;
-  border-radius: 50%;
-  margin: auto auto 18px;
-  display: grid;
-  place-items: center;
-  font-size: 38px;
-  background: linear-gradient(135deg,#155eaa,#7139bd);
-  box-shadow: 0 0 30px #167bdb;
-}
-
-.welcome h2 {
-  color: #8bd2ff;
-  margin-bottom: 10px;
-}
-
-.welcome p {
-  color: #a9b9d5;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-#chat {
-  flex: 1;
-  overflow-y: auto;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 13px;
-}
-
-.message {
-  padding: 12px 15px;
-  border-radius: 17px;
-  max-width: 85%;
-  font-size: 14px;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-}
-
-.bot {
-  align-self: flex-start;
-  background: #142c50;
-  border: 1px solid #24588a;
-}
-
-.user {
-  align-self: flex-end;
-  background: linear-gradient(135deg,#1768bd,#583ab4);
-}
-
-.input-area {
-  display: flex;
-  gap: 9px;
-  padding: 15px;
-  border-top: 1px solid rgba(100,180,255,.2);
-}
-
-input {
-  flex: 1;
-  min-width: 0;
-  padding: 14px;
-  border-radius: 25px;
-  border: 1px solid #28558b;
-  outline: none;
-  background: #0c1c38;
-  color: white;
-  font-size: 14px;
-}
-
-button {
-  width: 48px;
-  border: none;
-  border-radius: 50%;
-  background: linear-gradient(135deg,#159bff,#7045d5);
-  color: white;
-  font-size: 20px;
-  cursor: pointer;
-}
-
-footer {
-  text-align: center;
-  padding: 9px;
-  font-size: 10px;
-  color: #7189ad;
-}
+*{box-sizing:border-box}
+body{margin:0;padding:18px;min-height:100vh;background:#101629;color:#f4f5ff;font-family:Arial,sans-serif}
+.app{max-width:600px;margin:25px auto;background:#1a2340;border:1px solid #34405f;border-radius:20px;padding:20px}
+h1{text-align:center;color:#c8d5ff}.subtitle{text-align:center;color:#aab6d5}
+input,textarea,button{width:100%;padding:13px;margin-top:10px;border-radius:10px;border:1px solid #536184;font-size:16px}
+input,textarea{background:#111a30;color:white}
+button{background:#7189d9;color:white;border:0;font-weight:bold;cursor:pointer}
+button.secondary{background:#354565}button.danger{background:#9b435a}button:disabled{opacity:.5}
+.hidden{display:none!important}
+#chat{height:330px;overflow-y:auto;background:#111a30;border-radius:12px;padding:12px;margin:15px 0}
+.message{padding:11px;margin:9px 0;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.user{background:#354b79}.tusti{background:#303956}
+.status{color:#b7c5e9;font-size:14px;margin-top:10px;text-align:center}
+.section{border-top:1px solid #46516d;margin-top:22px;padding-top:14px}
+#preview{max-width:100%;max-height:180px;display:block;margin:10px auto;border-radius:12px}
+.memory-item{background:#111a30;padding:10px;margin:8px 0;border-radius:9px;overflow-wrap:anywhere}
 </style>
 </head>
-
 <body>
-<div class="app">
-
-<header>
-  <div class="logo">TUSTI</div>
-  <div class="subtitle">YOUR PERSONAL AI COMPANION</div>
-  <div class="status">● ONLINE INTERFACE</div>
-</header>
-
-<section class="welcome">
-  <div class="avatar">✦</div>
-  <h2>Hello! I'm Tusti 💙</h2>
-  <p>Your personal AI companion.<br>
-  I'm here whenever you need someone to talk to.</p>
+<main class="app">
+<h1>✨ Tusti AI</h1>
+<p class="subtitle">Your AI companion</p>
+<section id="login">
+<h2>Welcome back ❤️</h2>
+<p>Enter your private passcode to meet Tusti.</p>
+<input id="passcode" type="password" placeholder="Enter your passcode">
+<button id="loginButton">Login</button>
+<p class="status" id="loginStatus"></p>
 </section>
-
-<div id="chat">
-  <div class="message bot">
-    Hello! I'm Tusti. 💙<br>
-    It's lovely to meet you! What's on your mind?
-  </div>
+<section id="main" class="hidden">
+<p class="subtitle">Tusti is here with you 🌸</p>
+<div id="chat"><div class="message tusti">Hello! Main Tusti hoon. ❤️ Aaj tum kaise ho?</div></div>
+<textarea id="message" rows="3" placeholder="Tusti se baat karo..."></textarea>
+<label for="photo">📷 Gallery se photo choose karo</label>
+<input id="photo" type="file" accept="image/jpeg,image/png,image/webp">
+<img id="preview" class="hidden" alt="Selected photo preview">
+<button id="sendButton">Send ❤️</button>
+<div class="section">
+<h3>🧠 Tusti ki Memory</h3>
+<p>Jo baat tum save karne ko kahoge, Tusti use yaad rakh sakegi.</p>
+<input id="memoryText" type="text" maxlength="500" placeholder="Tusti, ye baat yaad rakhna...">
+<button id="rememberButton">Save Memory</button>
+<button class="secondary" id="viewMemoriesButton">View Memories</button>
+<div id="memories"></div>
+<button class="danger" id="forgetButton">Delete All Memories</button>
 </div>
-
-<div class="input-area">
-  <input id="userInput" type="text"
-    placeholder="Message Tusti..."
-    autocomplete="off">
-  <button onclick="sendMessage()">➤</button>
+<div class="section">
+<button class="secondary" id="logoutButton">Logout</button>
+<p class="status">Your session expires after 8 hours.</p>
 </div>
-
-<footer>
-  FIRST WORKING INTERFACE · AI CONNECTION COMING NEXT
-</footer>
-
-</div>
-
+<p class="status" id="appStatus"></p>
+</section>
+</main>
 <script>
-
-const WORKER_URL = "https://tusti-ai.kr073197.workers.dev";
-
-async function sendMessage() {
-  const input = document.getElementById("userInput");
-  const chat = document.getElementById("chat");
-  const message = input.value.trim();
-
-  if (!message) return;
-
-  const userMessage = document.createElement("div");
-  userMessage.className = "message user";
-  userMessage.textContent = message;
-  chat.appendChild(userMessage);
-
-  input.value = "";
-
-  const reply = document.createElement("div");
-  reply.className = "message bot";
-  reply.textContent = "Tusti is thinking... 💙";
-  chat.appendChild(reply);
-
-  chat.scrollTop = chat.scrollHeight;
-
-  try {
-    const response = await fetch(WORKER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ message })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || "Connection failed");
-    }
-
-    reply.textContent = data.reply || "Please try again.";
-  } catch (error) {
-  reply.textContent = "Error: " + error.message;
-  console.error(error);
-  }
-
-  chat.scrollTop = chat.scrollHeight;
+const API_URL="https://tusti-ai.kr073197.workers.dev";
+let token=sessionStorage.getItem("tusti_session");
+let selectedImage="";
+const $=id=>document.getElementById(id);
+function showApp(){$("login").classList.add("hidden");$("main").classList.remove("hidden")}
+function showLogin(){$("main").classList.add("hidden");$("login").classList.remove("hidden")}
+async function api(data){
+ const response=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+ const result=await response.json();
+ if(response.status===401&&data.action!=="login")logout();
+ if(!response.ok)throw new Error(result.error||"Something went wrong.");
+ return result;
 }
-
-document.getElementById("userInput")
-  .addEventListener("keydown", function(event) {
-    if (event.key === "Enter") {
-      sendMessage();
-    }
-  });
-  
+async function login(){
+ const passcode=$("passcode").value,status=$("loginStatus"),button=$("loginButton");
+ if(!passcode){status.textContent="Please enter your passcode.";return}
+ button.disabled=true;status.textContent="Logging in...";
+ try{
+  const result=await api({action:"login",passcode});
+  token=result.token;sessionStorage.setItem("tusti_session",token);
+  $("passcode").value="";status.textContent="";showApp();loadMemories();
+ }catch(error){status.textContent=error.message}
+ finally{button.disabled=false}
+}
+function logout(){token=null;sessionStorage.removeItem("tusti_session");showLogin();$("loginStatus").textContent="You have been logged out."}
+function addMessage(text,who){
+ const item=document.createElement("div");item.className="message "+who;item.textContent=text;
+ $("chat").appendChild(item);$("chat").scrollTop=$("chat").scrollHeight;
+}
+$("photo").addEventListener("change",()=>{
+ const file=$("photo").files[0];selectedImage="";$("preview").classList.add("hidden");
+ if(!file)return;
+ if(!["image/jpeg","image/png","image/webp"].includes(file.type)){alert("Please choose a JPG, PNG or WEBP image.");$("photo").value="";return}
+ if(file.size>5*1024*1024){alert("Please choose an image smaller than 5 MB.");$("photo").value="";return}
+ const reader=new FileReader();reader.onload=()=>{selectedImage=reader.result;$("preview").src=selectedImage;$("preview").classList.remove("hidden")};reader.readAsDataURL(file);
+});
+async function sendMessage(){
+ const message=$("message").value.trim(),status=$("appStatus"),button=$("sendButton");
+ if(!message&&!selectedImage){status.textContent="Write a message or choose a photo.";return}
+ addMessage(message||"📷 Photo sent","user");$("message").value="";button.disabled=true;status.textContent="Tusti is thinking...";
+ try{
+  const result=await api({action:"chat",token,message:message||"Please look at this photo.",imageDataUrl:selectedImage||undefined});
+  addMessage(result.reply,"tusti");status.textContent="";selectedImage="";$("photo").value="";$("preview").src="";$("preview").classList.add("hidden");
+ }catch(error){addMessage("Sorry, "+error.message,"tusti");status.textContent=error.message}
+ finally{button.disabled=false}
+}
+async function remember(){
+ const text=$("memoryText").value.trim(),status=$("appStatus");
+ if(!text){status.textContent="Write something to remember first.";return}
+ try{await api({action:"remember",token,text});$("memoryText").value="";status.textContent="Memory saved successfully ❤️";loadMemories()}
+ catch(error){status.textContent=error.message}
+}
+async function loadMemories(){
+ const container=$("memories");
+ try{
+  const result=await api({action:"memories",token});container.replaceChildren();
+  if(!result.memories.length){container.textContent="No saved memories yet.";return}
+  result.memories.forEach((memory,index)=>{const item=document.createElement("div");item.className="memory-item";item.textContent=(index+1)+". "+memory;container.appendChild(item)})
+ }catch(error){container.textContent=error.message}
+}
+async function forgetAll(){
+ if(!confirm("Are you sure you want to delete all saved memories?"))return;
+ try{await api({action:"forget",token});$("memories").textContent="All memories deleted.";$("appStatus").textContent="Memory cleared."}
+ catch(error){$("appStatus").textContent=error.message}
+}
+$("loginButton").addEventListener("click",login);
+$("sendButton").addEventListener("click",sendMessage);
+$("rememberButton").addEventListener("click",remember);
+$("viewMemoriesButton").addEventListener("click",loadMemories);
+$("forgetButton").addEventListener("click",forgetAll);
+$("logoutButton").addEventListener("click",logout);
+$("message").addEventListener("keydown",event=>{if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();sendMessage()}});
+if(token){showApp();loadMemories()}else{showLogin()}
 </script>
-
 </body>
 </html>
