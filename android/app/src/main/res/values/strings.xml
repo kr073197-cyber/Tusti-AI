@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tusti</string>
+    <string name="title_activity_main">Tusti</string>
+    <string name="package_name">com.tusti.ai</string>
+    <string name="custom_url_scheme">com.tusti.ai</string>
+</resources>

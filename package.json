@@ -3,13 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "echo Tusti ready"
+    "build": "vite build --outDir www",
+    "android:sync": "npx cap sync android"
   },
   "dependencies": {
     "@capacitor/core": "^7.4.3"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.4.3",
-    "@capacitor/android": "^7.4.3"
+    "@capacitor/android": "^7.4.3",
+    "vite": "^6.3.5"
   }
 }
